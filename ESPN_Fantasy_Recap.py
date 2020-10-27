@@ -381,7 +381,7 @@ def espn_data_download():
         json.dump(sc_data, outfile)
 
 def data_processing():
-    w=4
+    w=Variable.get("week")
     with open('data/sc_data_{}.json'.format(w)) as f:
         sc_data = json.load(f)
 
@@ -433,7 +433,7 @@ def set_token():
     Variable.set("GHOST_TOKEN_SECRET", token)
 
 def data_upload():
-    w=4
+    w=Variable.get("week")
     with open('data/plots_data_{}.json'.format(w)) as f:
         gplots = json.load(f)
     opath='data/w{}_overall_prob.png'.format(w)
@@ -446,7 +446,7 @@ def data_upload():
         json.dump(ugplots, outfile)
 
 def gen_mobiledoc():
-    w=4
+    w=Variable.get("week")
     with open('data/upplots_data_{}.json'.format(w)) as f:
         upplots = json.load(f)
 
@@ -497,8 +497,9 @@ def gen_mobiledoc():
         json.dump(mobiledoc, outfile)
 
 def upload_post():
-    w=4
-    key = '5f808148c9c9380001c19663:940f1101a860af76263129344d8b98576d0070277f827fe27f1db34f44b223b3'
+    w=Variable.get("week")
+    #key = '5f808148c9c9380001c19663:940f1101a860af76263129344d8b98576d0070277f827fe27f1db34f44b223b3'
+    key=Variable.get("GHOST_SECRET")
 
     # Split the key into ID and SECRET
     id, secret = key.split(':')
