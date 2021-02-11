@@ -1,6 +1,6 @@
 # AUTOMATIC MARKDOWN POST GENERATION FOR FANTASY FOOTBALL USING ESPN API
 
-Trying to keep people engaged in my fantasy football league is an ongoing struggle. Because of this I started a ghost blog to have some weekly posts go out to generate some engagement from the other league members. I also did not want to spend a lot of time writing posts every week so I figured automating the data gathering aspect and making a few predictions using ESPN's _API_ (which is undocumented for whatever reason) would be a good way to go.
+Trying to keep people engaged in my fantasy football league is an ongoing struggle. Because of this I started a ghost blog on for my league to have some weekly posts go out to generate some engagement from the other league members. I also did not want to spend a lot of time writing posts every week so I figured automating the data gathering aspect and making a few predictions using ESPN's _API_ (which is undocumented for whatever reason) would be a good way to go.
 
 ## ESPN API
 As I mentioned before ESPN fantasy does have a fantasy football API, but it is not really documented and changes quite often (just a few days ago they added pagination to their results breaking a bunch of code). However as of this writing (2/10/2021) the following endpoint works and is what I used.
@@ -207,9 +207,9 @@ and our `tarr` looks like this
      plt.savefig('Week{}/g{}_prob.png'.format(w,i))
      all_rosters=all_rosters.append(g['away']['roster'])
  ```
- So we will end up with each matchip histogram. For example:
+ So we will end up with each matchup histogram. For example:
 
- ![Example]()
+ ![Example_matchup](./w4_g1_prob.png)
 
  Finally for a overall view of each teams performance we can do the following:
 
@@ -226,7 +226,7 @@ and our `tarr` looks like this
 
  Which gives us the following plot, with the red dot representing the actual team score
 
-  ![Example]()
+  ![Example_overall](./w4_overall_prob.png)
 
 Finally we calculate some fun stats (team with the top best possible score and team with the worst best possible score. We also calculate the league MVP and LVP (in terms of points scored versus other players in the position).
 
@@ -281,129 +281,4 @@ with open(filename, 'w', encoding='utf-8') as f:
     f.write(' \n')
     f.write('## Overall Team Performance \n')
 ```
-
-## Preview Post
-The preview post follows the same logic:
-```python
-gnum=1
-headings=[]
-subheadings=[]
-games={}
-diffs={}
-all_ros_p=pd.DataFrame([])
-for game in sc_data['schedule']:
-    if game['matchupPeriodId']==w:
-        print("Game {}".format(gnum))
-        #print("home: {} away: {}".format(game['home']['teamId'],game['away']['teamId']))
-        home=game['home']
-        home_n=team_map.get(game['home']['teamId'])
-        home_div=team_div.get(game['home']['teamId'])
-        home_rec=rtxt_dict.get(game['home']['teamId'])
-        away=game['away']
-        away_n=team_map.get(game['away']['teamId'])
-        away_div=team_div.get(game['away']['teamId'])
-        away_rec=rtxt_dict.get(game['away']['teamId'])
-
-        games[gnum]='{} vs {}'.format(home_n,away_n)
-
-
-        columns=['Player','AScore','PScore','Slot','Pos','PSlots']
-
-        plines=[]
-        #The important line for projected scores is to use statSourceID for them.
-        for ent in home['rosterForCurrentScoringPeriod']['entries']:
-            a_score=ent['playerPoolEntry']['appliedStatTotal']
-            for x in ent['playerPoolEntry']['player']['stats']:
-                if x['statSourceId']==1:
-                    pl_proj=x
-                    p_score=pl_proj['appliedTotal']
-                    break
-            pline=[ent['playerPoolEntry']['player']['fullName'],
-             a_score,
-             p_score,
-             ent['lineupSlotId'],
-             pos_dict.get(ent['lineupSlotId'],'Unknown'),
-             ent['playerPoolEntry']['player']['eligibleSlots']]
-            plines.append(pline)
-        tlp=pd.DataFrame(plines,columns=columns)
-        tlp.insert(column='tid',loc=0,value=home['teamId'])
-        tlp.insert(column='gid',loc=0,value=gnum)
-        home_pscore=tlp[~tlp['Slot'].isin([20,21])].PScore.sum()
-        all_ros_p=all_ros_p.append(tlp)
-
-        plines=[]
-        for ent in away['rosterForCurrentScoringPeriod']['entries']:
-            a_score=ent['playerPoolEntry']['appliedStatTotal']
-            for x in ent['playerPoolEntry']['player']['stats']:
-                if x['statSourceId']==1:
-                    pl_proj=x
-                    p_score=pl_proj['appliedTotal']
-                    break
-            pline=[ent['playerPoolEntry']['player']['fullName'],
-             a_score,
-             p_score,
-             ent['lineupSlotId'],
-             pos_dict.get(ent['lineupSlotId'],'Unknown'),
-             ent['playerPoolEntry']['player']['eligibleSlots']]
-            plines.append(pline)
-        tlp=pd.DataFrame(plines,columns=columns)
-        tlp.insert(column='tid',loc=0,value=away['teamId'])
-        tlp.insert(column='gid',loc=0,value=gnum)
-        away_pscore=tlp[~tlp['Slot'].isin([20,21])].PScore.sum()
-
-        all_ros_p=all_ros_p.append(tlp)
-
-        heading="{} {} {} Div. P:{:.1f} vs {} {} {} Div. P:{:.1f}".format(home_n,
-                                                          home_rec,
-                                                          home_div,
-                                                          home_pscore,
-                                                          away_n,
-                                                          away_rec,
-                                                          away_div,
-                                                          away_pscore)
-        headings.append(heading)
-
-        if home_pscore>away_pscore:
-            subheading='Advantage: {} by {:.1f}'.format(home_n,home_pscore-away_pscore)
-        elif home_pscore<away_pscore:
-            subheading='Advantage: {} by {:.1f}'.format(away_n,away_pscore-home_pscore)
-        else:
-            subheading='Guess you tie?'
-        subheadings.append(subheading)
-        diffs[gnum]=np.abs(home_pscore-away_pscore)
-        print(heading)
-        gnum=gnum+1
-```
-We also get the projected blowout and tight game of the week
-
-```python
-blowout=games[pd.DataFrame.from_dict(diffs,orient='index')[0].idxmax()]
-tight=games[pd.DataFrame.from_dict(diffs,orient='index')[0].idxmin()]
-```
-Finally for the subheading I just pull the first article in the Sports category of the onion
-```python
-onion_h=requests.get('https://www.theonion.com/tag/sports')
-soup = BeautifulSoup(onion_h.text, 'html.parser')
-itxt=soup.find('article').find('img').get('alt', '')
-quote='> {} - The Onion'.format(itxt)
-```
-
-The markdown file is then created as follows
-```python
-filename='Week{}/preview_post.md'.format(w)
-with open(filename, 'w', encoding='utf-8') as f:
-    f.write("# Week {} Preview \n".format(w))
-    f.write('{} \n'.format(quote))
-    f.write('## Team Projections \n')
-    f.write('* Projected Blowout of the Week: {}  \n'.format(blowout))
-    f.write('* Projected Tight of the Week {}'.format(tight))
-    f.write('\n\n')
-    for h,sh in zip(headings,subheadings):
-        f.write('#### {} \n'.format(h))
-        f.write('{} \n'.format(sh))
-    f.write(' \n')
-```
-
 And that is it. After they get imported into ghost I go ahead and write whatever blurb I want under each teams heading. It works pretty well and saves me a bunch of time. As the weeks go on I will probably add more charts and stats to each post.
-
-Jupyter Notebooks found [here](https://github.com)
