@@ -1,9 +1,9 @@
 # AUTOMATIC MARKDOWN POST GENERATION FOR FANTASY FOOTBALL USING ESPN API
 
-Trying to keep people engaged in my fantasy football league is an ongoing struggle. Because of this I started a ghost blog on "#####" to have some weekly posts go out to generate some engagement from the other league members. I also did not want to spend a lot of time writing posts every week so I figured automating the data gathering aspect and making a few predictions using ESPN's _API_ (which is undocumented for whatever reason) woul dbe a good way to go.
+Trying to keep people engaged in my fantasy football league is an ongoing struggle. Because of this I started a ghost blog to have some weekly posts go out to generate some engagement from the other league members. I also did not want to spend a lot of time writing posts every week so I figured automating the data gathering aspect and making a few predictions using ESPN's _API_ (which is undocumented for whatever reason) would be a good way to go.
 
 ## ESPN API
-As I mentioned before ESPN fantasy does have a fantasy football API, but it is not really documented and changes quite often (just a few days ago they added pagination to their results breaking a bunch of code). However as of this writing (9/21/2020) the following endpoint works and is what I used.
+As I mentioned before ESPN fantasy does have a fantasy football API, but it is not really documented and changes quite often (just a few days ago they added pagination to their results breaking a bunch of code). However as of this writing (2/10/2021) the following endpoint works and is what I used.
 
 ```python
 leagueID=LEAGUEID
